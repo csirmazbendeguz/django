@@ -7,7 +7,9 @@ from itertools import chain
 from django.core.exceptions import EmptyResultSet, FieldError, FullResultSet
 from django.db import DatabaseError, NotSupportedError
 from django.db.models.constants import LOOKUP_SEP
-from django.db.models.expressions import F, OrderBy, RawSQL, Ref, Value
+from django.db.models.expressions import Cols, F, OrderBy, RawSQL, Ref, Value
+from django.db.models.fields import composite
+from django.db.models.fields.composite import CompositePrimaryKey
 from django.db.models.functions import Cast, Random
 from django.db.models.lookups import Lookup
 from django.db.models.query_utils import select_related_descend
@@ -283,6 +285,9 @@ class SQLCompiler:
                 # Reference to a column.
                 elif isinstance(expression, int):
                     expression = cols[expression]
+                # Cols cannot be aliased.
+                if isinstance(expression, Cols):
+                    alias = None
                 selected.append((alias, expression))
 
         for select_idx, (alias, expression) in enumerate(selected):
@@ -350,6 +355,8 @@ class SQLCompiler:
         # relatively expensive.
         if ordering and (select := self.select):
             for ordinal, (expr, _, alias) in enumerate(select, start=1):
+                if isinstance(expr, Cols):
+                    continue
                 pos_expr = PositionRef(ordinal, alias, expr)
                 if alias:
                     selected_exprs[alias] = pos_expr
@@ -997,6 +1004,7 @@ class SQLCompiler:
         # alias for a given field. This also includes None -> start_alias to
         # be used by local fields.
         seen_models = {None: start_alias}
+        select_mask_fields = set(composite.unnest(select_mask))
 
         for field in opts.concrete_fields:
             model = field.model._meta.concrete_model
@@ -1017,7 +1025,7 @@ class SQLCompiler:
                 # parent model data is already present in the SELECT clause,
                 # and we want to avoid reloading the same data again.
                 continue
-            if select_mask and field not in select_mask:
+            if select_mask and field not in select_mask_fields:
                 continue
             alias = self.query.join_parent_model(opts, model, start_alias, seen_models)
             column = field.get_col(alias)
@@ -1110,9 +1118,10 @@ class SQLCompiler:
                 )
             return results
         targets, alias, _ = self.query.trim_joins(targets, joins, path)
+        target_fields = composite.unnest(targets)
         return [
             (OrderBy(transform_function(t, alias), descending=descending), False)
-            for t in targets
+            for t in target_fields
         ]
 
     def _setup_joins(self, pieces, opts, alias):
@@ -1505,12 +1514,34 @@ class SQLCompiler:
 
     def get_converters(self, expressions):
         converters = {}
-        for i, expression in enumerate(expressions):
-            if expression:
+        slice_converters = {}
+        i = 0
+
+        for expression in expressions:
+            if isinstance(expression, Cols):
+                # Include the regular converters for the composite fields.
+                cols = expression.get_source_expressions()
+                cols_converters = self.get_converters(cols)
+                for j, (convs, col) in cols_converters.items():
+                    converters[i + j] = (convs, col)
+                # Include a slice converter to convert the composite fields to a tuple.
+                cols_len = len(expression)
+                slice_pos = (i, i + cols_len)
+                slice_converters[slice_pos] = ((Cols.db_converter,), expression)
+                i += cols_len
+            elif expression:
                 backend_converters = self.connection.ops.get_db_converters(expression)
                 field_converters = expression.get_db_converters(self.connection)
                 if backend_converters or field_converters:
                     converters[i] = (backend_converters + field_converters, expression)
+                i += 1
+            else:
+                i += 1
+
+        if slice_converters:
+            # Apply slice converters in reverse to avoid IndexErrors.
+            converters.update(reversed(slice_converters.items()))
+
         return converters
 
     def apply_converters(self, rows, converters):
@@ -1518,6 +1549,8 @@ class SQLCompiler:
         converters = list(converters.items())
         for row in map(list, rows):
             for pos, (convs, expression) in converters:
+                if isinstance(pos, tuple):
+                    pos = slice(*pos)
                 value = row[pos]
                 for converter in convs:
                     value = converter(value, expression, connection)
@@ -1863,6 +1896,19 @@ class SQLInsertCompiler(SQLCompiler):
                     )
                 ]
                 cols = [field.get_col(opts.db_table) for field in self.returning_fields]
+            elif isinstance(opts.pk, CompositePrimaryKey):
+                assert len(returning_fields) == 1
+                returning_field = returning_fields[0]
+                cols = [returning_field.get_col(opts.db_table)]
+                rows = [
+                    (
+                        self.connection.ops.last_insert_id(
+                            cursor,
+                            opts.db_table,
+                            returning_field.column,
+                        ),
+                    )
+                ]
             else:
                 cols = [opts.pk.get_col(opts.db_table)]
                 rows = [
@@ -2065,9 +2111,12 @@ class SQLUpdateCompiler(SQLCompiler):
         query.add_fields(fields)
         super().pre_sql_setup()
 
+        # If the table has a composite pk, idents are pre-selected because not all
+        # databases support expressions such as "(id_1, id_2) IN (SELECT ...)".
+        is_composite_pk = isinstance(meta.pk, CompositePrimaryKey)
         must_pre_select = (
             count > 1 and not self.connection.features.update_can_self_select
-        )
+        ) or is_composite_pk
 
         # Now we adjust the current query: reset the where clause and get rid
         # of all the tables we don't need (since they're in the sub-select).
@@ -2079,7 +2128,8 @@ class SQLUpdateCompiler(SQLCompiler):
             idents = []
             related_ids = collections.defaultdict(list)
             for rows in query.get_compiler(self.using).execute_sql(MULTI):
-                idents.extend(r[0] for r in rows)
+                pks = [row if is_composite_pk else row[0] for row in rows]
+                idents.extend(pks)
                 for parent, index in related_ids_index:
                     related_ids[parent].extend(r[index] for r in rows)
             self.query.add_filter("pk__in", idents)
