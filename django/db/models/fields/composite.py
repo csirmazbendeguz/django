@@ -360,23 +360,14 @@ class CompositePrimaryKey(Field):
     def is_set(cls, values):
         return all(value is not None for value in values)
 
-    def get_lookup(self, lookup_name):
-        if lookup_name == "exact":
-            return TupleExact
-        elif lookup_name == "gt":
-            return TupleGreaterThan
-        elif lookup_name == "gte":
-            return TupleGreaterThanOrEqual
-        elif lookup_name == "lt":
-            return TupleLessThan
-        elif lookup_name == "lte":
-            return TupleLessThanOrEqual
-        elif lookup_name == "in":
-            return TupleIn
-        elif lookup_name == "isnull":
-            return TupleIsNull
 
-        raise NotImplementedError
+CompositePrimaryKey.register_lookup(TupleExact)
+CompositePrimaryKey.register_lookup(TupleGreaterThan)
+CompositePrimaryKey.register_lookup(TupleGreaterThanOrEqual)
+CompositePrimaryKey.register_lookup(TupleLessThan)
+CompositePrimaryKey.register_lookup(TupleLessThanOrEqual)
+CompositePrimaryKey.register_lookup(TupleIn)
+CompositePrimaryKey.register_lookup(TupleIsNull)
 
 
 def unnest_composite_fields(fields):

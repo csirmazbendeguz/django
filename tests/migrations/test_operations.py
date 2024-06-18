@@ -6163,7 +6163,8 @@ class OperationTests(OperationTestBase):
         operation_2 = migrations.AlterField("Pony", "id", models.IntegerField())
         operation_3 = migrations.RemoveField("Pony", "primary_key")
         table_name = f"{app_label}_pony"
-        # Add field (primary_key).
+
+        # 1. Add field (primary_key).
         new_state = project_state.clone()
         operation_1.state_forwards(app_label, new_state)
         with connection.schema_editor() as editor:
@@ -6174,7 +6175,8 @@ class OperationTests(OperationTestBase):
         self.assertEqual(obj_1.id, 1)
         self.assertEqual(obj_1.pk, (obj_1.id,))
         self.assertEqual(obj_1.pk, obj_1.primary_key)
-        # Alter field (id -> IntegerField()).
+
+        # 2. Alter field (id -> IntegerField()).
         project_state, new_state = new_state, new_state.clone()
         operation_2.state_forwards(app_label, new_state)
         with connection.schema_editor() as editor:
@@ -6188,7 +6190,8 @@ class OperationTests(OperationTestBase):
         self.assertEqual(obj_2.id, 2)
         self.assertEqual(obj_2.pk, (obj_2.id,))
         self.assertEqual(obj_2.pk, obj_2.primary_key)
-        # Remove field (primary_key).
+
+        # 3. Remove field (primary_key).
         project_state, new_state = new_state, new_state.clone()
         operation_3.state_forwards(app_label, new_state)
         with connection.schema_editor() as editor:
