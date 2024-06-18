@@ -52,10 +52,12 @@ primary key appropriately.
 
 .. note::
 
-    While migration operations (e.g. ``AddField``, ``AlterField``) on primary
-    keys are not supported, ``makemigrations`` will still detect changes.
+    While migration operations (e.g. ``AddField``, ``AlterField``) on
+    primary key fields are not supported, ``makemigrations`` will still detect
+    changes.
 
-    To avoid errors, apply these migrations with ``--fake``.
+    In order to avoid errors, it's recommended to apply such migrations with
+    ``--fake``.
 
 How to define a composite foreign key
 =====================================
