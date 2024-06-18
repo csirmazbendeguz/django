@@ -105,6 +105,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
             for f in model._meta.local_concrete_fields
         }
 
+        # Copy the CompositePrimaryKey to the new table.
         pk = model._meta.pk
         if isinstance(pk, CompositePrimaryKey):
             body[pk.name] = pk.clone()

@@ -46,8 +46,8 @@ Django's migration operations.
 If you would like to migrate an existing table from a single primary key to a
 composite primary key, follow your database backend's instructions to do so.
 
-Once the composite primary key is in place, add the ``CompositePrimaryKey`` to
-your model. This allows Django to recognize and handle your composite
+Once the composite primary key is in place, add the ``CompositePrimaryKey``
+field to your model. This allows Django to recognize and handle the composite
 primary key appropriately.
 
 .. note::
