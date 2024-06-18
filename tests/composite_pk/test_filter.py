@@ -36,6 +36,15 @@ class CompositePKFilterTests(TestCase):
             ({"pk": (self.tenant_1.id, self.user_3.id)}, 0),
             ({"pk": (self.tenant_2.id, self.user_1.id)}, 0),
             ({"pk": (self.tenant_2.id, self.user_2.id)}, 0),
+            ({"primary_key": self.user_1.pk}, 1),
+            ({"primary_key": self.user_2.pk}, 1),
+            ({"primary_key": self.user_3.pk}, 1),
+            ({"primary_key": (self.tenant_1.id, self.user_1.id)}, 1),
+            ({"primary_key": (self.tenant_1.id, self.user_2.id)}, 1),
+            ({"primary_key": (self.tenant_2.id, self.user_3.id)}, 1),
+            ({"primary_key": (self.tenant_1.id, self.user_3.id)}, 0),
+            ({"primary_key": (self.tenant_2.id, self.user_1.id)}, 0),
+            ({"primary_key": (self.tenant_2.id, self.user_2.id)}, 0),
         )
 
         for lookup, count in test_cases:

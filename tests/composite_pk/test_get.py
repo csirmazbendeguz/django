@@ -25,6 +25,7 @@ class CompositePKGetTests(TestCase):
             {"pk": self.user_1.pk},
             {"pk": (self.tenant_1.id, self.user_1.id)},
             {"id": self.user_1.id},
+            {"primary_key": self.user_1.pk},
         )
 
         for lookup in test_cases:
@@ -35,11 +36,13 @@ class CompositePKGetTests(TestCase):
         test_cases = (
             {"pk": self.comment_1.pk},
             {"pk": (self.tenant_1.id, self.comment_1.id)},
+            {"primary_key": self.comment_1.pk},
             {"id": self.comment_1.id},
             {"user": self.user_1},
             {"user_id": self.user_1.id},
             {"user__id": self.user_1.id},
             {"user__pk": self.user_1.pk},
+            {"user__primary_key": self.user_1.pk},
             {"tenant": self.tenant_1},
             {"tenant_id": self.tenant_1.id},
             {"tenant__id": self.tenant_1.id},

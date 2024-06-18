@@ -95,6 +95,10 @@ class CompositePKUpdateTests(TestCase):
                 "id": self.user_1.id,
                 "defaults": {"email": "user8391@example.com"},
             },
+            {
+                "primary_key": (self.tenant_1.id, self.user_1.id),
+                "defaults": {"email": "user5301@example.com"},
+            },
         )
 
         for fields in test_cases:
