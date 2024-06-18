@@ -305,8 +305,8 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         elif isinstance(field, CompositePrimaryKey):
             # If a CompositePrimaryKey field was added, the existing primary key field
             # had to be altered too, resulting in an AddField, AlterField migration.
-            # The table cannot be re-created on AddField, it would result in a duplicate
-            # primary key error.
+            # The table cannot be re-created on AddField, it would result in a
+            # duplicate primary key error.
             return
         elif (
             # Primary keys and unique fields are not supported in ALTER TABLE
