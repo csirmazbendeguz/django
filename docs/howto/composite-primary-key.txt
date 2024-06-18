@@ -50,6 +50,13 @@ Once the composite primary key is in place, add the ``CompositePrimaryKey`` to
 your model. This allows Django to recognize and handle your composite
 primary key appropriately.
 
+.. note::
+
+    While migration operations (e.g. ``AddField``, ``AlterField``) on primary
+    keys are not supported, ``makemigrations`` will still detect changes.
+
+    To avoid errors, apply these migrations with ``--fake``.
+
 How to define a composite foreign key
 =====================================
 
