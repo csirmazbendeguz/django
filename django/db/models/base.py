@@ -509,9 +509,12 @@ class Model(AltersData, metaclass=ModelBase):
         for field in fields_iter:
             is_related_object = False
             # Virtual field
-            if field.attname not in kwargs and field.column is None or field.generated:
-                continue
-            if isinstance(field, CompositePrimaryKey):
+            if (
+                field.attname not in kwargs
+                and field.column is None
+                or field.generated
+                or isinstance(field, CompositePrimaryKey)
+            ):
                 continue
             if kwargs:
                 if isinstance(field.remote_field, ForeignObjectRel):
