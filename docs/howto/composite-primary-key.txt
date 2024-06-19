@@ -102,6 +102,7 @@ The database functions may not work with composite primary keys.
 This is because most database functions accept a single field only.
 
 .. code-block:: sql
+
     COUNT("id")  -- ✓ OK
     COUNT("tenant_id", "id")  -- 𐄂 ERROR
 
@@ -109,5 +110,6 @@ So, unless the database function accepts multiple fields, don't
 use them with composite primary keys directly.
 
 .. code-block:: pycon
+
     Count("comments__id")  -- ✓ OK
     Count("comments")  -- 𐄂 ERROR
