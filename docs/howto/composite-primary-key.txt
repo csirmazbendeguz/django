@@ -107,7 +107,7 @@ This is because most database functions accept a single field only.
     COUNT("tenant_id", "id")  -- 𐄂 ERROR
 
 So, unless the database function accepts multiple fields, don't
-use them with composite primary keys directly.
+use it with a composite primary key directly.
 
 .. code-block:: pycon
 
