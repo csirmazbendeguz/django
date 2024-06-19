@@ -94,9 +94,20 @@ support generic relations yet.
 The work to add composite primary key support to generic relations
 hasn't started yet.
 
-Known issues
-============
+Composite primary keys and database functions
+=============================================
 
-1. Due to the way Django resolves reverse relations, annotations don't work
-   with composite primary keys directly.
-   So, instead of `Count("books")`, try `Count("books__id")`.
+The database functions may not work with composite primary keys.
+
+This is because most database functions accept a single field only.
+
+.. code-block:: sql
+    COUNT("id")  -- ✓ OK
+    COUNT("tenant_id", "id")  -- 𐄂 ERROR
+
+So, unless the database function accepts multiple fields, don't
+use them with composite primary keys directly.
+
+.. code-block:: pycon
+    Count("comments__id")  -- ✓ OK
+    Count("comments")  -- 𐄂 ERROR
