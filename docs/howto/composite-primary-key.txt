@@ -84,3 +84,12 @@ For the time being, the ``ForeignObject`` field can be used as an alternative:
 
     ``ForeignObject`` is an internal API. The work to provide a public API for
     composite foreign keys is still under progress. Use it at your own risk.
+
+Composite primary keys and generic relations
+============================================
+
+The composite primary key feature is still in its infancy, it doesn't
+support generic relations yet.
+
+The work to add composite primary key support to generic relations
+hasn't started.
