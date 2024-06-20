@@ -77,7 +77,6 @@ For the time being, the ``ForeignObject`` field can be used as an alternative:
             on_delete=models.CASCADE,
             from_fields=("tenant_id", "user_id"),
             to_fields=("tenant_id", "id"),
-            related_name="+",
         )
 
 .. warning::
@@ -111,5 +110,5 @@ use it with a composite primary key directly.
 
 .. code-block:: pycon
 
-    Count("comments__id")  -- ✓ OK
-    Count("comments")  -- 𐄂 ERROR
+    Count("comment_set__id")  -- ✓ OK
+    Count("comment_set")  -- 𐄂 ERROR
