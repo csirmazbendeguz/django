@@ -1118,13 +1118,13 @@ class ForeignKey(ForeignObject):
         return related_fields
 
     def get_attname(self):
-        if 1 < len(self.from_fields):
+        if len(self.from_fields) > 1:
             return self.name
         return "%s_id" % self.name
 
     def get_attname_column(self):
         attname = self.get_attname()
-        if 1 < len(self.from_fields):
+        if len(self.from_fields) > 1:
             return attname, None
         column = self.db_column or attname
         return attname, column
@@ -1152,7 +1152,7 @@ class ForeignKey(ForeignObject):
         return self.target_field.get_db_prep_value(value, connection, prepared)
 
     def get_prep_value(self, value):
-        if 1 < len(self.from_fields):
+        if len(self.from_fields) > 1:
             return super().get_prep_value(value)
         return self.target_field.get_prep_value(value)
 

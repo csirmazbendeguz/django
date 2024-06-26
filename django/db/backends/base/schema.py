@@ -230,7 +230,7 @@ class BaseDatabaseSchemaEditor:
             params.extend(extra_params)
             # FK.
             if field.remote_field and field.db_constraint:
-                if 1 < len(field.to_fields):
+                if len(field.to_fields) > 1:
                     if (
                         self.sql_create_fk
                         and self.connection.features.supports_foreign_keys
