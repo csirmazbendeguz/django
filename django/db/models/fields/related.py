@@ -1048,8 +1048,9 @@ class ForeignKey(ForeignObject):
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
-        del kwargs["to_fields"]
-        del kwargs["from_fields"]
+        if kwargs["from_fields"] == [RECURSIVE_RELATIONSHIP_CONSTANT]:
+            del kwargs["to_fields"]
+            del kwargs["from_fields"]
         # Handle the simpler arguments
         if self.db_index:
             del kwargs["db_index"]
