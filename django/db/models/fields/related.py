@@ -986,8 +986,12 @@ class ForeignKey(ForeignObject):
             related_name=related_name,
             related_query_name=related_query_name,
             limit_choices_to=limit_choices_to,
-            from_fields=from_fields or [RECURSIVE_RELATIONSHIP_CONSTANT],
-            to_fields=to_fields or [to_field],
+            from_fields=(
+                [RECURSIVE_RELATIONSHIP_CONSTANT]
+                if from_fields is None
+                else from_fields
+            ),
+            to_fields=[to_field] if to_fields is None else to_fields,
             **kwargs,
         )
         self.db_constraint = db_constraint
@@ -1048,7 +1052,7 @@ class ForeignKey(ForeignObject):
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
-        if kwargs["from_fields"] == [RECURSIVE_RELATIONSHIP_CONSTANT]:
+        if len(kwargs["from_fields"]) == len(kwargs["to_fields"]) <= 1:
             del kwargs["to_fields"]
             del kwargs["from_fields"]
         # Handle the simpler arguments
