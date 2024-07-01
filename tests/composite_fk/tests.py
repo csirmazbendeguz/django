@@ -46,11 +46,7 @@ class CompositeFKTests(TestCase):
         fk_constraint = constraints[fk_key]
         self.assertEqual(fk_constraint["columns"], ["tenant_id", "user_id"])
         self.assertEqual(
-            fk_constraint["foreign_key"],
-            (
-                ("composite_fk_user", "tenant_id"),
-                ("composite_fk_user", "id"),
-            ),
+            fk_constraint["foreign_key"], ("composite_fk_user", "tenant_id", "id")
         )
 
         idx_pattern = re.compile(r"composite_fk_comment_tenant_id_user_id_[\w]{8}")

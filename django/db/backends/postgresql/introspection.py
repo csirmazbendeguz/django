@@ -217,11 +217,8 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         for constraint, columns, kind, used_cols, options in cursor.fetchall():
             foreign_key = None
             if kind == "f":
-                foreign_key = tuple(tuple(col.split(".", 1)) for col in used_cols)
-                # If the foreign key has a single column, return a single tuple (for
-                # backwards compatibility).
-                if len(foreign_key) == 1:
-                    foreign_key = foreign_key[0]
+                cols = tuple(tuple(col.split(".", 1)) for col in used_cols)
+                foreign_key = tuple([cols[0][0]] + [col[1] for col in cols])
 
             constraints[constraint] = {
                 "columns": columns,
