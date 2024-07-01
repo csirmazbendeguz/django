@@ -60,6 +60,23 @@ class CompositeFKTests(TestCase):
         self.assertTrue(idx_constraint["index"])
         self.assertEqual(idx_constraint["orders"], ["ASC", "ASC"])
 
+    @skipUnless(connection.vendor == "mysql", "MySQL specific SQL")
+    def test_get_constraints_mysql(self):
+        constraints = self.get_constraints("composite_fk_comment")
+        keys = list(constraints.keys())
+        self.assertEqual(len(constraints), 3, keys)
+
+        fk_pattern = re.compile(
+            r"composite_fk_comment_tenant_id_user_id_[\w]{8}_fk_composite"
+        )
+        fk_key = next(key for key in keys if fk_pattern.fullmatch(key))
+        fk_constraint = constraints[fk_key]
+        self.assertEqual(fk_constraint["columns"], ["tenant_id", "user_id"])
+        self.assertTrue(fk_constraint["index"])
+        self.assertEqual(
+            fk_constraint["foreign_key"], ("composite_fk_user", "tenant_id", "id")
+        )
+
     def test_table_description(self):
         table_description = self.get_table_description("composite_fk_comment")
         self.assertEqual(
