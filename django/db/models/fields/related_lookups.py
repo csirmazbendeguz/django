@@ -1,6 +1,6 @@
 from django.db.models.expressions import Cols
 from django.db.models.fields.composite import unnest_composite_fields
-from django.db.models.fields.tuple_lookups import tuple_lookups
+from django.db.models.fields.tuple_lookups import TupleIn, tuple_lookups
 from django.db.models.lookups import (
     Exact,
     GreaterThan,
@@ -84,16 +84,17 @@ class RelatedIn(In):
 
             if self.rhs_is_direct_value():
                 values = [get_normalized_value(value, self.lhs) for value in self.rhs]
-                lookup_cls = tuple_lookups["in"]
-                lookup = lookup_cls(self.lhs, values)
-                return lookup.as_sql(compiler, connection)
+                lookup = TupleIn(self.lhs, values)
+                return compiler.compile(lookup)
             else:
-                return SubqueryConstraint(
-                    self.lhs.alias,
-                    [target.column for target in self.lhs.targets],
-                    [source.name for source in self.lhs.sources],
-                    self.rhs,
-                ).as_sql(compiler, connection)
+                return compiler.compile(
+                    SubqueryConstraint(
+                        self.lhs.alias,
+                        [target.column for target in self.lhs.targets],
+                        [source.name for source in self.lhs.sources],
+                        self.rhs,
+                    )
+                )
         return super().as_sql(compiler, connection)
 
 
@@ -122,7 +123,7 @@ class RelatedLookupMixin:
             self.rhs = get_normalized_value(self.rhs, self.lhs)
             lookup_cls = tuple_lookups[self.lookup_name]
             lookup = lookup_cls(self.lhs, self.rhs)
-            return lookup.as_sql(compiler, connection)
+            return compiler.compile(lookup)
         return super().as_sql(compiler, connection)
 
 
