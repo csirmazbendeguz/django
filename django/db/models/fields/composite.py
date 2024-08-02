@@ -25,11 +25,20 @@ class CompositeAttribute:
         return tuple(getattr(instance, attname) for attname in self.attnames)
 
     def __set__(self, instance, values):
-        if values is None:
-            values = (None,) * len(self.attnames)
+        attnames = self.attnames
 
-        for field_name, value in zip(self.attnames, values):
-            setattr(instance, field_name, value)
+        if values is None:
+            values = (None,) * len(attnames)
+
+        assert isinstance(
+            values, (list, tuple)
+        ), f"'{self.field.name}' must be a list or a tuple."
+        assert len(attnames) == len(
+            values
+        ), f"'{self.field.name}' must have {len(attnames)} elements."
+
+        for attname, value in zip(attnames, values):
+            setattr(instance, attname, value)
 
 
 class CompositePrimaryKey(Field):

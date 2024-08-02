@@ -44,6 +44,37 @@ class CompositePKTests(TestCase):
         user.id = None
         self.assertFalse(meta.pk.is_set(user.pk))
 
+    def test_pk_must_be_list_or_tuple(self):
+        user = User.objects.get(pk=self.user.pk)
+        test_cases = [
+            "foo",
+            1000,
+            3.14,
+            True,
+            False,
+        ]
+
+        for pk in test_cases:
+            with self.assertRaisesMessage(
+                AssertionError, "'pk' must be a list or a tuple."
+            ):
+                user.pk = pk
+
+    def test_pk_must_have_2_elements(self):
+        user = User.objects.get(pk=self.user.pk)
+        test_cases = [
+            (),
+            [],
+            (1000,),
+            [1000],
+            (1, 2, 3),
+            [1, 2, 3],
+        ]
+
+        for pk in test_cases:
+            with self.assertRaisesMessage(AssertionError, "'pk' must have 2 elements."):
+                user.pk = pk
+
     def test_composite_pk_in_fields(self):
         user_fields = {f.name for f in User._meta.get_fields()}
         self.assertEqual(user_fields, {"pk", "tenant", "id", "email", "comments"})
