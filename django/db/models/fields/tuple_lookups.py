@@ -214,6 +214,7 @@ class TupleIn(TupleLookupMixin, In):
             self.check_rhs_is_query()
 
     def as_subquery(self, compiler, connection):
+        assert connection.features.supports_tuple_in_subquery
         self.rhs.set_values([source.name for source in self.lhs.sources])
         return compiler.compile(In(Tuple(self.lhs), self.rhs))
 
