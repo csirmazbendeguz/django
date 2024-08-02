@@ -35,6 +35,8 @@ class CompositePKUpdateTests(TestCase):
         cls.comment_3 = Comment.objects.create(id=3, user=cls.user_2)
         cls.token_1 = Token.objects.create(id=1, tenant=cls.tenant_1)
         cls.token_2 = Token.objects.create(id=2, tenant=cls.tenant_2)
+        cls.token_3 = Token.objects.create(id=3, tenant=cls.tenant_1)
+        cls.token_4 = Token.objects.create(id=4, tenant=cls.tenant_2)
 
     def test_update_user(self):
         email = "user9315@example.com"
@@ -122,6 +124,8 @@ class CompositePKUpdateTests(TestCase):
     def test_update_token_by_tenant_name(self):
         result = Token.objects.filter(tenant__name="A").update(secret="bar")
 
-        self.assertEqual(result, 1)
+        self.assertEqual(result, 2)
         token_1 = Token.objects.get(pk=self.token_1.pk)
         self.assertEqual(token_1.secret, "bar")
+        token_3 = Token.objects.get(pk=self.token_3.pk)
+        self.assertEqual(token_3.secret, "bar")

@@ -2111,9 +2111,13 @@ class SQLUpdateCompiler(SQLCompiler):
         query.add_fields(fields)
         super().pre_sql_setup()
 
-        # If the table has a composite pk, idents are pre-selected because not all
-        # databases support expressions such as "(id_1, id_2) IN (SELECT ...)".
-        is_composite_pk = meta.is_composite_pk()
+        # If the table has a composite primary key, idents may need to be pre-selected
+        # because not all backends support expressions such as:
+        # WHERE (foo, bar) IN (SELECT foo, bar FROM baz)
+        is_composite_pk = (
+            self.connection.features.supports_tuple_in_subquery
+            and meta.is_composite_pk()
+        )
         must_pre_select = (
             count > 1 and not self.connection.features.update_can_self_select
         ) or is_composite_pk
