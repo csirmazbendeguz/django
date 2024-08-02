@@ -107,16 +107,15 @@ class CompositePrimaryKey(Field):
         return all(value is not None for value in values)
 
     def _check_field_name(self):
-        if self.name != "pk":
-            return [
-                checks.Error(
-                    "'CompositePrimaryKey' must be named 'pk'.",
-                    obj=self,
-                    id="fields.E013",
-                )
-            ]
-        else:
+        if self.name == "pk":
             return []
+        return [
+            checks.Error(
+                "'CompositePrimaryKey' must be named 'pk'.",
+                obj=self,
+                id="fields.E013",
+            )
+        ]
 
 
 CompositePrimaryKey.register_lookup(TupleExact)
