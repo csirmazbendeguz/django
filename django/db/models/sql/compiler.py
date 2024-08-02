@@ -7,7 +7,7 @@ from itertools import chain
 from django.core.exceptions import EmptyResultSet, FieldError, FullResultSet
 from django.db import DatabaseError, NotSupportedError
 from django.db.models.constants import LOOKUP_SEP
-from django.db.models.expressions import Cols, F, OrderBy, RawSQL, Ref, Value
+from django.db.models.expressions import ColPairs, F, OrderBy, RawSQL, Ref, Value
 from django.db.models.fields import composite
 from django.db.models.fields.composite import CompositePrimaryKey
 from django.db.models.functions import Cast, Random
@@ -285,8 +285,8 @@ class SQLCompiler:
                 # Reference to a column.
                 elif isinstance(expression, int):
                     expression = cols[expression]
-                # Cols cannot be aliased.
-                if isinstance(expression, Cols):
+                # ColPairs cannot be aliased.
+                if isinstance(expression, ColPairs):
                     alias = None
                 selected.append((alias, expression))
 
@@ -355,7 +355,7 @@ class SQLCompiler:
         # relatively expensive.
         if ordering and (select := self.select):
             for ordinal, (expr, _, alias) in enumerate(select, start=1):
-                if isinstance(expr, Cols):
+                if isinstance(expr, ColPairs):
                     continue
                 pos_expr = PositionRef(ordinal, alias, expr)
                 if alias:
@@ -1518,7 +1518,7 @@ class SQLCompiler:
         i = 0
 
         for expression in expressions:
-            if isinstance(expression, Cols):
+            if isinstance(expression, ColPairs):
                 # Include the regular converters for the composite fields.
                 cols = expression.get_source_expressions()
                 cols_converters = self.get_converters(cols)
@@ -1527,7 +1527,7 @@ class SQLCompiler:
                 # Include a slice converter to convert the composite fields to a tuple.
                 cols_len = len(expression)
                 slice_pos = (i, i + cols_len)
-                slice_converters[slice_pos] = ((Cols.db_converter,), expression)
+                slice_converters[slice_pos] = ((ColPairs.db_converter,), expression)
                 i += cols_len
             elif expression:
                 backend_converters = self.connection.ops.get_db_converters(expression)

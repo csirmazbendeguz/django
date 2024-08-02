@@ -1,5 +1,6 @@
 from django.db import NotSupportedError
 from django.db.models.expressions import ColPairs
+from django.db.models.fields import composite
 from django.db.models.fields.tuple_lookups import TupleIn, tuple_lookups
 from django.db.models.lookups import (
     Exact,
@@ -21,7 +22,7 @@ def get_normalized_value(value, lhs):
         if not opts.pk.is_set(pk):
             raise ValueError("Model instances passed to related filters must be saved.")
         value_list = []
-        sources = unnest_composite_fields(lhs.output_field.path_infos[-1].target_fields)
+        sources = composite.unnest(lhs.output_field.path_infos[-1].target_fields)
         for source in sources:
             while not isinstance(value, source.model) and source.remote_field:
                 source = source.remote_field.model._meta.get_field(

@@ -1,6 +1,6 @@
 from django.core import checks
 from django.db.models import NOT_PROVIDED, Field
-from django.db.models.expressions import Cols
+from django.db.models.expressions import ColPairs
 from django.db.models.fields.tuple_lookups import (
     TupleExact,
     TupleGreaterThan,
@@ -83,7 +83,7 @@ class CompositePrimaryKey(Field):
 
     @cached_property
     def cached_col(self):
-        return Cols(self.model._meta.db_table, self.fields, self.fields, self)
+        return ColPairs(self.model._meta.db_table, self.fields, self.fields, self)
 
     def get_col(self, alias, output_field=None):
         if alias == self.model._meta.db_table and (
@@ -91,7 +91,7 @@ class CompositePrimaryKey(Field):
         ):
             return self.cached_col
 
-        return Cols(alias, self.fields, self.fields, output_field)
+        return ColPairs(alias, self.fields, self.fields, output_field)
 
     @classmethod
     def is_set(cls, values):
