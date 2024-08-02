@@ -1439,7 +1439,7 @@ class Model(AltersData, metaclass=ModelBase):
                     continue
                 if isinstance(f, CompositePrimaryKey):
                     names = tuple(field.name for field in f.fields)
-                    if all(name not in exclude for name in names):
+                    if exclude.isdisjoint(names):
                         unique_checks.append((model_class, names))
                     continue
                 if f.unique:
