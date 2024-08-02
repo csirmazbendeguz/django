@@ -1,6 +1,7 @@
 import copy
 import inspect
 import warnings
+from collections import defaultdict
 from functools import partialmethod
 from itertools import chain
 
@@ -1762,7 +1763,7 @@ class Model(AltersData, metaclass=ModelBase):
         if not isinstance(pk, CompositePrimaryKey):
             return errors
 
-        seen_columns = {}
+        seen_columns = defaultdict(list)
 
         for field_name in pk.field_names:
             hint = None
@@ -1781,9 +1782,7 @@ class Model(AltersData, metaclass=ModelBase):
             elif field.generated:
                 hint = "'%s' field is a generated field." % (field_name,)
             else:
-                if alias := seen_columns.get(field.column):
-                    hint = "'%s' is an alias of '%s'." % (field_name, alias)
-                seen_columns[field.column] = field_name
+                seen_columns[field.column].append(field_name)
 
             if hint:
                 errors.append(
@@ -1791,6 +1790,21 @@ class Model(AltersData, metaclass=ModelBase):
                         "'%s' cannot be included in the composite primary key."
                         % (field_name,),
                         hint=hint,
+                        obj=cls,
+                        id="models.E042",
+                    )
+                )
+
+        for column, field_names in seen_columns.items():
+            if len(field_names) > 1:
+                field_name = "'%s'" % field_names[0]
+                duplicates = ", ".join("'%s'" % (f,) for f in field_names[1:])
+                errors.append(
+                    checks.Error(
+                        "%s cannot be included in the composite primary key."
+                        % (duplicates,),
+                        hint="%s and %s are the same fields."
+                        % (duplicates, field_name),
                         obj=cls,
                         id="models.E042",
                     )

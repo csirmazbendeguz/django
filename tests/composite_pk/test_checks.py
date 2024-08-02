@@ -91,7 +91,7 @@ class CompositePKChecksTests(TestCase):
             [
                 checks.Error(
                     "'foo_id' cannot be included in the composite primary key.",
-                    hint="'foo_id' is an alias of 'foo'.",
+                    hint="'foo_id' and 'foo' are the same fields.",
                     obj=Bar,
                     id="models.E042",
                 ),
