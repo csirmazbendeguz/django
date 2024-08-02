@@ -7,7 +7,13 @@ from django.conf import settings
 from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.core.signals import setting_changed
 from django.db import connections
-from django.db.models import AutoField, Manager, OrderWrt, UniqueConstraint
+from django.db.models import (
+    AutoField,
+    CompositePrimaryKey,
+    Manager,
+    OrderWrt,
+    UniqueConstraint,
+)
 from django.db.models.fields import composite
 from django.db.models.query_utils import PathInfo
 from django.utils.datastructures import ImmutableList, OrderedSet
@@ -977,6 +983,9 @@ class Options:
     @cached_property
     def pk_fields(self):
         return composite.unnest([self.pk])
+
+    def is_composite_pk(self):
+        return isinstance(self.pk, CompositePrimaryKey)
 
     @cached_property
     def _property_names(self):

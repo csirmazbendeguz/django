@@ -2113,7 +2113,7 @@ class SQLUpdateCompiler(SQLCompiler):
 
         # If the table has a composite pk, idents are pre-selected because not all
         # databases support expressions such as "(id_1, id_2) IN (SELECT ...)".
-        is_composite_pk = isinstance(meta.pk, CompositePrimaryKey)
+        is_composite_pk = meta.is_composite_pk()
         must_pre_select = (
             count > 1 and not self.connection.features.update_can_self_select
         ) or is_composite_pk

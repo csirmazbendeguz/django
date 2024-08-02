@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.options import IS_POPUP_VAR
-from django.contrib.admin.utils import unquote
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import (
     AdminPasswordChangeForm,
@@ -11,7 +10,6 @@ from django.contrib.auth.forms import (
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import PermissionDenied
 from django.db import router, transaction
-from django.db.models import CompositePrimaryKey
 from django.http import Http404, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
@@ -154,9 +152,7 @@ class UserAdmin(admin.ModelAdmin):
 
     @sensitive_post_parameters_m
     def user_change_password(self, request, id, form_url=""):
-        is_composite = isinstance(self.opts.pk, CompositePrimaryKey)
-        user_id = unquote(id, is_composite=is_composite)
-        user = self.get_object(request, user_id)
+        user = self.get_object(request, self.unquote(id))
         if not self.has_change_permission(request, user):
             raise PermissionDenied
         if user is None:
