@@ -37,7 +37,7 @@ This is _almost_ the same as setting ``primary_key=True`` on the field.
 Changes to *pk*
 ===============
 
-In Django, composite primary keys are represented with ``tuple``s:
+In Django, composite primary keys are represented with ``tuple``\s:
 
 .. code-block:: pycon
 
@@ -48,7 +48,7 @@ In Django, composite primary keys are represented with ``tuple``s:
     >>> foo.pk
     (1,)
 
-You may assign ``tuple``s to composite ``pk``s:
+You may assign ``tuple``\s to composite ``pk``\s:
 
 .. code-block:: pycon
 
@@ -60,7 +60,7 @@ You may assign ``tuple``s to composite ``pk``s:
     >>> user.id
     3
 
-Or filter composite ``pk``s by ``tuple``s:
+Or filter composite ``pk``\s by ``tuple``\s:
 
 .. code-block:: pycon
 
