@@ -106,8 +106,8 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         }
 
         # Copy the CompositePrimaryKey to the new table.
-        # Since composite primary keys are not concrete fields (column is None),
-        # they are not copied by default.
+        # Since CompositePrimaryKey is not a concrete field (column is None),
+        # it's not copied by default.
         pk = model._meta.pk
         if isinstance(pk, CompositePrimaryKey):
             body[pk.name] = pk.clone()
