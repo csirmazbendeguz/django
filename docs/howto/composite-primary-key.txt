@@ -163,5 +163,7 @@ use it with a composite primary key directly.
 
 .. code-block:: pycon
 
+    Count("id")  -- ✓ OK
+    Count("pk")  -- 𐄂 ERROR
     Count("comment_set__id")  -- ✓ OK
     Count("comment_set")  -- 𐄂 ERROR
