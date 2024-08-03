@@ -105,7 +105,6 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
             for f in model._meta.local_concrete_fields
         }
 
-        # Copy the CompositePrimaryKey to the new table.
         # Since CompositePrimaryKey is not a concrete field (column is None),
         # it's not copied by default.
         pk = model._meta.pk
