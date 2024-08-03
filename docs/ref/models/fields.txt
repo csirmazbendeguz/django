@@ -707,9 +707,8 @@ isn't defined.
 
 A virtual field used for defining a composite primary key.
 
-It's a special field that may be set as a model's ``pk`` field.
-
-If present, Django will create a composite primary key when creating the table.
+It's a special field that may be set as a model's ``pk`` field. If present,
+Django will create a composite primary key when creating the table.
 
 The ``*field_names`` argument is a list of positional field names that should
 be included in the composite primary key.
