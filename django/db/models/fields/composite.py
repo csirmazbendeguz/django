@@ -30,12 +30,10 @@ class CompositeAttribute:
         if values is None:
             values = (None,) * len(attnames)
 
-        assert isinstance(
-            values, (list, tuple)
-        ), f"'{self.field.name}' must be a list or a tuple."
-        assert len(attnames) == len(
-            values
-        ), f"'{self.field.name}' must have {len(attnames)} elements."
+        if not isinstance(values, (list, tuple)):
+            raise ValueError(f"'{self.field.name}' must be a list or a tuple.")
+        if len(attnames) != len(values):
+            raise ValueError(f"'{self.field.name}' must have {len(attnames)} elements.")
 
         for attname, value in zip(attnames, values):
             setattr(instance, attname, value)

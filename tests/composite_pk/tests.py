@@ -56,7 +56,7 @@ class CompositePKTests(TestCase):
 
         for pk in test_cases:
             with self.assertRaisesMessage(
-                AssertionError, "'pk' must be a list or a tuple."
+                ValueError, "'pk' must be a list or a tuple."
             ):
                 user.pk = pk
 
@@ -72,7 +72,7 @@ class CompositePKTests(TestCase):
         ]
 
         for pk in test_cases:
-            with self.assertRaisesMessage(AssertionError, "'pk' must have 2 elements."):
+            with self.assertRaisesMessage(ValueError, "'pk' must have 2 elements."):
                 user.pk = pk
 
     def test_composite_pk_in_fields(self):
