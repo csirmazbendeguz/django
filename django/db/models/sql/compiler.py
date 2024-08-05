@@ -1,5 +1,4 @@
 import collections
-import itertools
 import json
 import re
 from functools import partial
