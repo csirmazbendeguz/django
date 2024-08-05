@@ -1340,11 +1340,6 @@ class ColPairs(Expression):
     def resolve_expression(self, *args, **kwargs):
         return self
 
-    @staticmethod
-    def db_converter(value, *_):
-        assert isinstance(value, list)
-        return (tuple(value),)
-
 
 class Ref(Expression):
     """

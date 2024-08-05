@@ -1,4 +1,5 @@
 import collections
+import itertools
 import json
 import re
 from functools import partial
@@ -1513,22 +1514,16 @@ class SQLCompiler:
         return result
 
     def get_converters(self, expressions):
-        converters = {}
-        slice_converters = {}
         i = 0
+        converters = {}
 
         for expression in expressions:
             if isinstance(expression, ColPairs):
-                # Include the regular converters for the composite fields.
                 cols = expression.get_source_expressions()
                 cols_converters = self.get_converters(cols)
                 for j, (convs, col) in cols_converters.items():
                     converters[i + j] = (convs, col)
-                # Include a slice converter to convert the composite fields to a tuple.
-                cols_len = len(expression)
-                slice_pos = (i, i + cols_len)
-                slice_converters[slice_pos] = ((ColPairs.db_converter,), expression)
-                i += cols_len
+                i += len(expression)
             elif expression:
                 backend_converters = self.connection.ops.get_db_converters(expression)
                 field_converters = expression.get_db_converters(self.connection)
@@ -1538,10 +1533,6 @@ class SQLCompiler:
             else:
                 i += 1
 
-        if slice_converters:
-            # Apply slice converters in reverse to avoid IndexErrors.
-            converters.update(reversed(slice_converters.items()))
-
         return converters
 
     def apply_converters(self, rows, converters):
@@ -1549,12 +1540,19 @@ class SQLCompiler:
         converters = list(converters.items())
         for row in map(list, rows):
             for pos, (convs, expression) in converters:
-                if isinstance(pos, tuple):
-                    pos = slice(*pos)
                 value = row[pos]
                 for converter in convs:
                     value = converter(value, expression, connection)
                 row[pos] = value
+            yield row
+
+    def composite_fields_to_tuples(self, rows, expressions):
+        for row in map(list, rows):
+            for i, expression in enumerate(expressions):
+                if isinstance(expression, ColPairs):
+                    position = slice(i, i + len(expression))
+                    row[position] = (tuple(row[position]),)
+
             yield row
 
     def results_iter(
@@ -1574,8 +1572,9 @@ class SQLCompiler:
         rows = chain.from_iterable(results)
         if converters:
             rows = self.apply_converters(rows, converters)
-            if tuple_expected:
-                rows = map(tuple, rows)
+        rows = self.composite_fields_to_tuples(rows, fields)
+        if tuple_expected:
+            rows = map(tuple, rows)
         return rows
 
     def has_results(self):
@@ -1922,8 +1921,9 @@ class SQLInsertCompiler(SQLCompiler):
                 ]
         converters = self.get_converters(cols)
         if converters:
-            rows = list(self.apply_converters(rows, converters))
-        return rows
+            rows = self.apply_converters(rows, converters)
+        rows = self.composite_fields_to_tuples(rows, cols)
+        return list(rows)
 
 
 class SQLDeleteCompiler(SQLCompiler):
