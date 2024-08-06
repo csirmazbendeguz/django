@@ -9,7 +9,7 @@ import sqlparse
 from django.conf import settings
 from django.db import NotSupportedError, transaction
 from django.db.backends import utils
-from django.db.models.expressions import Col
+from django.db.models.expressions import Col, ColPairs
 from django.utils import timezone
 from django.utils.deprecation import RemovedInDjango60Warning
 from django.utils.encoding import force_str
@@ -800,7 +800,33 @@ class BaseDatabaseOperations:
         return ""
 
     def prepare_join_on_clause(self, lhs_table, lhs_field, rhs_table, rhs_field):
-        lhs_expr = Col(lhs_table, lhs_field)
-        rhs_expr = Col(rhs_table, rhs_field)
+        lhs_expr = lhs_field.get_col(lhs_table)
+        rhs_expr = rhs_field.get_col(rhs_table)
+
+        if (
+            isinstance(lhs_expr, Col)
+            and isinstance(rhs_expr, ColPairs)
+            and len(rhs_expr) > 1
+        ):
+            return self.prepare_join_on_json_clause(lhs_expr, rhs_expr)
+        elif (
+            isinstance(lhs_expr, ColPairs)
+            and isinstance(rhs_expr, Col)
+            and len(lhs_expr) > 1
+        ):
+            return self.prepare_join_on_json_clause(rhs_expr, lhs_expr)
 
         return lhs_expr, rhs_expr
+
+    def prepare_join_on_json_clause(self, lhs_expr, rhs_expr):
+        """
+        If a generic foreign key refers to a composite primary key, the object_id is in
+        a JSON format backed by a CharField / TextField field.
+
+        To support joining on generic foreign keys, use the backend-specific JSON
+        functions.
+        """
+        raise NotImplementedError(
+            "subclasses of BaseDatabaseOperations may require a "
+            "prepare_join_on_json_clause() method."
+        )

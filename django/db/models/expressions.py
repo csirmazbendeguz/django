@@ -1340,6 +1340,12 @@ class ColPairs(Expression):
     def __iter__(self):
         return iter(self.get_cols())
 
+    def __repr__(self):
+        return "{}({})".format(
+            self.__class__.__name__,
+            ", ".join(repr(col) for col in self.get_cols()),
+        )
+
     def get_cols(self):
         return [
             Col(self.alias, target, source)
@@ -1373,11 +1379,6 @@ class ColPairs(Expression):
 
     def resolve_expression(self, *args, **kwargs):
         return self
-
-    @staticmethod
-    def db_converter(value, *_):
-        assert isinstance(value, list)
-        return (tuple(value),)
 
 
 class Ref(Expression):

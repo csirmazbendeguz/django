@@ -1,5 +1,6 @@
 import functools
 import itertools
+import json
 import warnings
 from collections import defaultdict
 
@@ -8,7 +9,8 @@ from asgiref.sync import sync_to_async
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks
 from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
-from django.db import DEFAULT_DB_ALIAS, models, router, transaction
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import DEFAULT_DB_ALIAS, connection, models, router, transaction
 from django.db.models import DO_NOTHING, ForeignObject, ForeignObjectRel
 from django.db.models.base import ModelBase, make_foreign_order_accessors
 from django.db.models.fields import Field
@@ -23,6 +25,29 @@ from django.db.models.sql.where import WhereNode
 from django.db.models.utils import AltersData
 from django.utils.deprecation import RemovedInDjango60Warning
 from django.utils.functional import cached_property
+
+
+def serialize_pk(obj):
+    if isinstance(obj.pk, tuple):
+        return json.dumps(
+            [
+                field.get_db_prep_value(value, connection)
+                for field, value in zip(obj._meta.pk, obj.pk)
+            ],
+            cls=DjangoJSONEncoder,
+        )
+    else:
+        return obj.pk
+
+
+def deserialize_pk(pk):
+    if isinstance(pk, str) and pk.startswith("[") and pk.endswith("]"):
+        try:
+            return tuple(json.loads(pk))
+        except json.JSONDecodeError:
+            return pk
+    else:
+        return pk
 
 
 class GenericForeignKey(FieldCacheMixin, Field):
@@ -195,11 +220,12 @@ class GenericForeignKey(FieldCacheMixin, Field):
             if ct_id is not None:
                 fk_val = getattr(instance, self.fk_field)
                 if fk_val is not None:
-                    fk_dict[ct_id].add(fk_val)
+                    fk_dict[ct_id].add(deserialize_pk(fk_val))
                     instance_dict[ct_id] = instance
 
         ret_val = []
         for ct_id, fkeys in fk_dict.items():
+            fkeys = list(fkeys)
             if ct_id in custom_queryset_dict:
                 # Return values from the custom queryset, if provided.
                 ret_val.extend(custom_queryset_dict[ct_id].filter(pk__in=fkeys))
@@ -225,7 +251,7 @@ class GenericForeignKey(FieldCacheMixin, Field):
 
         return (
             ret_val,
-            lambda obj: (obj.pk, obj.__class__),
+            lambda obj: (serialize_pk(obj), obj.__class__),
             gfk_key,
             True,
             self.name,
@@ -242,7 +268,8 @@ class GenericForeignKey(FieldCacheMixin, Field):
         # use ContentType.objects.get_for_id(), which has a global cache.
         f = self.model._meta.get_field(self.ct_field)
         ct_id = getattr(instance, f.attname, None)
-        pk_val = getattr(instance, self.fk_field)
+        fk_val = getattr(instance, self.fk_field)
+        pk_val = deserialize_pk(fk_val)
 
         rel_obj = self.get_cached_value(instance, default=None)
         if rel_obj is None and self.is_cached(instance):
@@ -251,7 +278,9 @@ class GenericForeignKey(FieldCacheMixin, Field):
             ct_match = (
                 ct_id == self.get_content_type(obj=rel_obj, using=instance._state.db).id
             )
-            pk_match = ct_match and rel_obj._meta.pk.to_python(pk_val) == rel_obj.pk
+            pk_match = ct_match and (
+                rel_obj._meta.pk.to_python(pk_val)
+            ) == deserialize_pk(serialize_pk(rel_obj))
             if pk_match:
                 return rel_obj
             else:
@@ -272,7 +301,7 @@ class GenericForeignKey(FieldCacheMixin, Field):
         fk = None
         if value is not None:
             ct = self.get_content_type(obj=value)
-            fk = value.pk
+            fk = serialize_pk(value)
 
         setattr(instance, self.ct_field, ct)
         setattr(instance, self.fk_field, fk)
@@ -541,7 +570,8 @@ class GenericRelation(ForeignObject):
                 % self.content_type_field_name: ContentType.objects.db_manager(using)
                 .get_for_model(self.model, for_concrete_model=self.for_concrete_model)
                 .pk,
-                "%s__in" % self.object_id_field_name: [obj.pk for obj in objs],
+                "%s__in"
+                % self.object_id_field_name: [serialize_pk(obj) for obj in objs],
             }
         )
 
@@ -589,7 +619,7 @@ def create_generic_related_manager(superclass, rel):
             self.content_type_field_name = rel.field.content_type_field_name
             self.object_id_field_name = rel.field.object_id_field_name
             self.prefetch_cache_name = rel.field.attname
-            self.pk_val = instance.pk
+            self.pk_val = serialize_pk(instance)
 
             self.core_filters = {
                 "%s__pk" % self.content_type_field_name: self.content_type.id,
