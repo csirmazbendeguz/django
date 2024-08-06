@@ -1,5 +1,6 @@
 import functools
 import itertools
+import json
 import warnings
 from collections import defaultdict
 
@@ -242,7 +243,8 @@ class GenericForeignKey(FieldCacheMixin, Field):
         # use ContentType.objects.get_for_id(), which has a global cache.
         f = self.model._meta.get_field(self.ct_field)
         ct_id = getattr(instance, f.attname, None)
-        pk_val = getattr(instance, self.fk_field)
+        fk_val = getattr(instance, self.fk_field)
+        pk_val = self.deserialize_pk(fk_val)
 
         rel_obj = self.get_cached_value(instance, default=None)
         if rel_obj is None and self.is_cached(instance):
@@ -272,11 +274,21 @@ class GenericForeignKey(FieldCacheMixin, Field):
         fk = None
         if value is not None:
             ct = self.get_content_type(obj=value)
-            fk = value.pk
+            fk = self.serialize_pk(value.pk)
 
         setattr(instance, self.ct_field, ct)
         setattr(instance, self.fk_field, fk)
         self.set_cached_value(instance, value)
+
+    def serialize_pk(self, pk):
+        if isinstance(pk, (tuple, list)):
+            pk = json.dumps(pk)
+        return pk
+
+    def deserialize_pk(self, pk):
+        if pk.startswith("["):
+            pk = json.loads(pk)
+        return pk
 
 
 class GenericRel(ForeignObjectRel):
