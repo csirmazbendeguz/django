@@ -43,3 +43,12 @@ class CompositePKGenericTests(TestCase):
 
         post_1 = Post.objects.get(pk=self.post_1.pk)
         self.assertSequenceEqual(post_1.tags.all(), (self.tag_2,))
+
+    def test_cascade_delete_if_generic_relation(self):
+        Post.objects.get(pk=self.post_1.pk).delete()
+        self.assertFalse(Tag.objects.filter(pk=self.tag_2.pk).exists())
+
+    def test_no_cascade_delete_if_no_generic_relation(self):
+        Comment.objects.get(pk=self.comment_1.pk).delete()
+        tag_1 = Tag.objects.get(pk=self.tag_1.pk)
+        self.assertIsNone(tag_1.content_object)
