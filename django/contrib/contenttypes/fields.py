@@ -9,6 +9,7 @@ from asgiref.sync import sync_to_async
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks
 from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import DEFAULT_DB_ALIAS, models, router, transaction
 from django.db.models import DO_NOTHING, ForeignObject, ForeignObjectRel
 from django.db.models.base import ModelBase, make_foreign_order_accessors
@@ -282,7 +283,7 @@ class GenericForeignKey(FieldCacheMixin, Field):
 
     def serialize_pk(self, pk):
         if isinstance(pk, (tuple, list)):
-            pk = json.dumps(pk)
+            pk = json.dumps(pk, cls=DjangoJSONEncoder)
         return pk
 
     def deserialize_pk(self, pk):

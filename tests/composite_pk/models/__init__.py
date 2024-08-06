@@ -1,9 +1,9 @@
-from .tenant import Comment, Post, TaggedItem, Tenant, Token, User
+from .tenant import Comment, Post, Tag, Tenant, Token, User
 
 __all__ = [
     "Comment",
     "Post",
-    "TaggedItem",
+    "Tag",
     "Tenant",
     "Token",
     "User",
