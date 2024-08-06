@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 
 from .models import Comment, TaggedItem, Tenant, User
@@ -20,6 +21,11 @@ class CompositePKGenericTests(TestCase):
         cls.comment_5 = Comment.objects.create(id=5, user=cls.user_1)
         cls.tag_1 = TaggedItem.objects.create(tag="a", content_object=cls.comment_1)
 
-    def test_generic(self):
+    def test_fields(self):
         obj = TaggedItem.objects.get(id=self.tag_1.id)
+        comment_ct = ContentType.objects.get_for_model(Comment)
+        self.assertEqual(obj.content_type, comment_ct)
+        self.assertEqual(obj.object_id, f"[{self.tenant_1.id}, {self.comment_1.id}]")
         self.assertEqual(obj.content_object, self.comment_1)
+
+    def
