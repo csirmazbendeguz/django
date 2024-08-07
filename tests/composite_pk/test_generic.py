@@ -109,3 +109,16 @@ class CompositePKGenericTests(TestCase):
         self.assertEqual(post_1.tags.count(), 1)
         self.assertEqual(Tag.objects.count(), tag_count - 1)
         self.assertFalse(Tag.objects.filter(pk=self.tag_2.pk).exists())
+
+    def test_tags_get_or_create(self):
+        post_1 = Post.objects.get(pk=self.post_1.pk)
+
+        tag_2, created = post_1.tags.get_or_create(name="b")
+        self.assertFalse(created)
+        self.assertEqual(tag_2, self.tag_2)
+
+        tag_3, created = post_1.tags.get_or_create(name="c")
+        self.assertTrue(created)
+        self.assertEqual(tag_3.content_type, self.post_ct)
+        self.assertEqual(tag_3.object_id, f'[{self.tenant_1.id}, "{self.POST_1_ID}"]')
+        self.assertEqual(tag_3.content_object, post_1)
