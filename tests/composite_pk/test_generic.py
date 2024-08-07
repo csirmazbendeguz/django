@@ -79,11 +79,17 @@ class CompositePKGenericTests(TestCase):
 
     def test_tags_add(self):
         tag_count = Tag.objects.count()
-        tag_3 = Tag(name="c")
         post_1 = Post.objects.get(pk=self.post_1.pk)
+
+        tag_3 = Tag(name="c")
         post_1.tags.add(tag_3, bulk=False)
         self.assertEqual(post_1.tags.count(), 2)
         self.assertEqual(Tag.objects.count(), tag_count + 1)
+
+        tag_4 = Tag.objects.create(name="d", content_object=self.comment_2)
+        post_1.tags.add(tag_4)
+        self.assertEqual(post_1.tags.count(), 3)
+        self.assertEqual(Tag.objects.count(), tag_count + 2)
 
     def test_tags_set(self):
         tag_count = Tag.objects.count()
