@@ -52,3 +52,15 @@ class CompositePKGenericTests(TestCase):
         Comment.objects.get(pk=self.comment_1.pk).delete()
         tag_1 = Tag.objects.get(pk=self.tag_1.pk)
         self.assertIsNone(tag_1.content_object)
+
+    def test_tags_clear(self):
+        post_1 = Post.objects.get(pk=self.post_1.pk)
+        post_1.tags.clear()
+        self.assertSequenceEqual(post_1.tags.all(), ())
+        self.assertFalse(Tag.objects.filter(pk=self.tag_2.pk).exists())
+
+    def test_tags_remove(self):
+        post_1 = Post.objects.get(pk=self.post_1.pk)
+        post_1.tags.remove(self.tag_2)
+        self.assertSequenceEqual(post_1.tags.all(), ())
+        self.assertFalse(Tag.objects.filter(pk=self.tag_2.pk).exists())
