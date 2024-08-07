@@ -76,3 +76,20 @@ class CompositePKGenericTests(TestCase):
         self.assertEqual(tag_3.content_type, self.post_ct)
         self.assertEqual(tag_3.object_id, f'[{self.tenant_1.id}, "{self.POST_1_ID}"]')
         self.assertEqual(tag_3.content_object, post_1)
+
+    def test_tags_add(self):
+        tag_count = Tag.objects.count()
+        tag_3 = Tag(name="c")
+        post_1 = Post.objects.get(pk=self.post_1.pk)
+        post_1.tags.add(tag_3, bulk=False)
+        self.assertEqual(post_1.tags.count(), 2)
+        self.assertEqual(Tag.objects.count(), tag_count + 1)
+
+    def test_tags_set(self):
+        tag_count = Tag.objects.count()
+        tag_1 = Tag.objects.get(name="a")
+        post_1 = Post.objects.get(pk=self.post_1.pk)
+        post_1.tags.set([tag_1])
+        self.assertEqual(post_1.tags.count(), 1)
+        self.assertEqual(Tag.objects.count(), tag_count - 1)
+        self.assertFalse(Tag.objects.filter(pk=self.tag_2.pk).exists())

@@ -56,7 +56,7 @@ class Post(models.Model):
 class Tag(models.Model):
     name = models.CharField(max_length=5)
     content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE, related_name="composite_pk_tag"
+        ContentType, on_delete=models.CASCADE, related_name="composite_pk_tag_set"
     )
     object_id = models.CharField(max_length=30)
     content_object = GenericForeignKey("content_type", "object_id")
