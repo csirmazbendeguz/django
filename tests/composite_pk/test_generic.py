@@ -74,5 +74,5 @@ class CompositePKGenericTests(TestCase):
 
         tag_3 = Tag.objects.get(name="c")
         self.assertEqual(tag_3.content_type, self.post_ct)
-        self.assertEqual(tag_3.object_id, f'[{post_1.tenant_id}, "{self.POST_1_ID}"]')
+        self.assertEqual(tag_3.object_id, f'[{self.tenant_1.id}, "{self.POST_1_ID}"]')
         self.assertEqual(tag_3.content_object, post_1)
