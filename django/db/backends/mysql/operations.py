@@ -3,7 +3,7 @@ import uuid
 from django.conf import settings
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.backends.utils import split_tzname_delta
-from django.db.models import Exists, ExpressionWrapper, Lookup
+from django.db.models import Exists, ExpressionWrapper, Func, Lookup
 from django.db.models.constants import OnConflict
 from django.utils import timezone
 from django.utils.encoding import force_str
@@ -456,3 +456,6 @@ class DatabaseOperations(BaseDatabaseOperations):
             update_fields,
             unique_fields,
         )
+
+    def prepare_join_on_json_clause(self, lhs_expr, rhs_expr):
+        return lhs_expr, Func(rhs_expr, function="JSON_ARRAY")

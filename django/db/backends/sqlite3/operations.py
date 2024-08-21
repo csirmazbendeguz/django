@@ -9,7 +9,7 @@ from django.core.exceptions import FieldError
 from django.db import DatabaseError, NotSupportedError, models
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models.constants import OnConflict
-from django.db.models.expressions import Col
+from django.db.models.expressions import Col, Func
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime, parse_time
 from django.utils.functional import cached_property
@@ -431,3 +431,6 @@ class DatabaseOperations(BaseDatabaseOperations):
 
     def force_group_by(self):
         return ["GROUP BY TRUE"] if Database.sqlite_version_info < (3, 39) else []
+
+    def prepare_join_on_json_clause(self, lhs_expr, rhs_expr):
+        return Func(lhs_expr, function="JSON"), Func(rhs_expr, function="JSON_ARRAY")
